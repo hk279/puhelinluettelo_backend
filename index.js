@@ -1,35 +1,15 @@
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
+require("dotenv").config();
+const Person = require("./models/person");
+
 const app = express();
 
 app.use(cors());
 app.use(express.static("build"));
 app.use(express.json());
 app.use(morgan("tiny"));
-
-let persons = [
-    {
-        id: 1,
-        name: "Arto Hellas",
-        number: "040-456938",
-    },
-    {
-        id: 2,
-        name: "Ada Lovelace",
-        number: "040-485140",
-    },
-    {
-        id: 3,
-        name: "Dan Abramov",
-        number: "040-098453",
-    },
-    {
-        id: 4,
-        name: "Mary Poppendick",
-        number: "040-183927",
-    },
-];
 
 // General info
 app.get("/info", (req, res) => {
@@ -41,30 +21,34 @@ app.get("/info", (req, res) => {
 
 // Get all entries
 app.get("/api/persons", (req, res) => {
-    res.send(persons);
+    const allPersons = Person.find({})
+        .then(() => {
+            console.log("All entries retrieved from the database");
+            res.json(allPersons);
+        })
+        .catch((err) => console.log(err));
 });
 
 // Get a single entry
 app.get("/api/persons/:id", (req, res) => {
-    const id = Number(req.params.id);
-    const person = persons.find((person) => person.id === id);
+    const person = Person.findById(req.params.id);
     if (!person) {
         res.status(404).end();
     } else {
-        res.send(person);
+        console.log(person);
+        res.json(person);
     }
 });
 
-// Post a new entry
+// Enter new data
 app.post("/api/persons", (req, res) => {
     const newPerson = {
-        id: Math.floor(Math.random() * Math.floor(1000)),
         name: req.body.name,
         number: req.body.number,
     };
 
-    const nameMatch = persons.find((person) => person.name === newPerson.name);
-    const numberMatch = persons.find((person) => person.number === newPerson.number);
+    const nameMatches = Person.find({ name: newPerson.name });
+    const numberMatches = Person.find({ number: newPerson.number });
 
     // Check for missing data
     if (!newPerson.name || !newPerson.number) {
@@ -72,29 +56,39 @@ app.post("/api/persons", (req, res) => {
             error: "Data missing",
         });
         // Check for duplicate name
-    } else if (typeof nameMatch !== "undefined") {
+    } else if (nameMatches.length !== 0) {
         return res.status(400).json({
             error: "Duplicate name",
         });
         // Check for duplicate number
-    } else if (typeof numberMatch !== "undefined") {
+    } else if (numberMatches.length !== 0) {
         return res.status(400).json({
             error: "Duplicate number",
         });
     }
 
-    persons.push(newPerson);
-    res.json(newPerson);
+    // Save the new person to the DB
+    newPerson
+        .save()
+        .then((res) => {
+            console.log(res, "Added to phonebook");
+        })
+        .catch((err) => console.log(err));
 });
 
 // Delete an entry
 app.delete("/api/persons/:id", (req, res) => {
-    const id = Number(req.params.id);
-    persons = persons.filter((person) => person.id !== id);
-    res.status(204).end();
+    Person.findByIdAndDelete(req.params.id)
+        .then(() => {
+            res.status(204).end();
+        })
+        .catch((err) => {
+            console.log(err);
+            res.status(204).end();
+        });
 });
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-    console.log(`Example app listening at http://localhost:${PORT}`);
+const port = process.env.PORT;
+app.listen(port, () => {
+    console.log("App listening");
 });
