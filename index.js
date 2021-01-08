@@ -21,23 +21,24 @@ app.get("/info", (req, res) => {
 
 // Get all entries
 app.get("/api/persons", (req, res) => {
-    const allPersons = Person.find({})
-        .then(() => {
+    Person.find({})
+        .then((result) => {
             console.log("All entries retrieved from the database");
-            res.json(allPersons);
+            res.send(result);
         })
         .catch((err) => console.log(err));
 });
 
 // Get a single entry
 app.get("/api/persons/:id", (req, res) => {
-    const person = Person.findById(req.params.id);
-    if (!person) {
-        res.status(404).end();
-    } else {
-        console.log(person);
-        res.json(person);
-    }
+    Person.findById(req.params.id).then((result) => {
+        if (!person) {
+            res.status(404).end();
+        } else {
+            console.log(result);
+            res.send(result);
+        }
+    });
 });
 
 // Enter new data
@@ -47,6 +48,9 @@ app.post("/api/persons", (req, res) => {
         number: req.body.number,
     };
 
+    console.log("Data received in the POST-request:", newPerson);
+
+    /*     // Find matches for the given name or phone number in the database.
     const nameMatches = Person.find({ name: newPerson.name });
     const numberMatches = Person.find({ number: newPerson.number });
 
@@ -65,13 +69,17 @@ app.post("/api/persons", (req, res) => {
         return res.status(400).json({
             error: "Duplicate number",
         });
-    }
+    } */
 
     // Save the new person to the DB
-    newPerson
+
+    var document = new Person(newPerson);
+
+    document
         .save()
-        .then((res) => {
-            console.log(res, "Added to phonebook");
+        .then((savedData) => {
+            console.log(result, "Added to phonebook");
+            res.json(savedData);
         })
         .catch((err) => console.log(err));
 });
