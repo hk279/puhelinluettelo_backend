@@ -4,6 +4,7 @@ const morgan = require("morgan");
 const app = express();
 
 app.use(cors());
+app.use(express.static("build"));
 app.use(express.json());
 app.use(morgan("tiny"));
 
@@ -29,10 +30,6 @@ let persons = [
         number: "040-183927",
     },
 ];
-
-app.get("/", (req, res) => {
-    res.send("index");
-});
 
 // General info
 app.get("/info", (req, res) => {
