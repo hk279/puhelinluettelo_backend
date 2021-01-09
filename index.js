@@ -78,7 +78,7 @@ app.post("/api/persons", (req, res) => {
     document
         .save()
         .then((savedData) => {
-            console.log(result, "Added to phonebook");
+            console.log(savedData, "Added to phonebook");
             res.json(savedData);
         })
         .catch((err) => console.log(err));
@@ -94,6 +94,16 @@ app.delete("/api/persons/:id", (req, res) => {
             console.log(err);
             res.status(204).end();
         });
+});
+
+// Update an entry
+app.put("/api/persons/:id", (req, res) => {
+    Person.findByIdAndUpdate(req.params.id, req.body)
+        .then((updatedData) => {
+            console.log(updatedData, "Data updated");
+            res.json(updatedData);
+        })
+        .catch((err) => console.log(err));
 });
 
 const port = process.env.PORT;
