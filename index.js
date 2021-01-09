@@ -31,14 +31,16 @@ app.get("/api/persons", (req, res) => {
 
 // Get a single entry
 app.get("/api/persons/:id", (req, res) => {
-    Person.findById(req.params.id).then((result) => {
-        if (!person) {
-            res.status(404).end();
-        } else {
-            console.log(result);
-            res.send(result);
-        }
-    });
+    Person.findById(req.params.id)
+        .then((result) => {
+            if (result === null) {
+                res.status(404).end();
+            } else {
+                console.log(result);
+                res.send(result);
+            }
+        })
+        .catch((err) => console.log(err));
 });
 
 // Enter new data
@@ -50,29 +52,14 @@ app.post("/api/persons", (req, res) => {
 
     console.log("Data received in the POST-request:", newPerson);
 
-    /*     // Find matches for the given name or phone number in the database.
-    const nameMatches = Person.find({ name: newPerson.name });
-    const numberMatches = Person.find({ number: newPerson.number });
-
     // Check for missing data
     if (!newPerson.name || !newPerson.number) {
         return res.status(400).json({
             error: "Data missing",
         });
-        // Check for duplicate name
-    } else if (nameMatches.length !== 0) {
-        return res.status(400).json({
-            error: "Duplicate name",
-        });
-        // Check for duplicate number
-    } else if (numberMatches.length !== 0) {
-        return res.status(400).json({
-            error: "Duplicate number",
-        });
-    } */
+    }
 
     // Save the new person to the DB
-
     var document = new Person(newPerson);
 
     document
