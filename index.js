@@ -116,6 +116,7 @@ const errorHandler = (error, request, response, next) => {
                 errMsg = `${errMsg} Duplicate number.`;
             }
         }
+        console.log(errMsg);
         return response.status(400).json({ errorMessage: errMsg });
     }
 
