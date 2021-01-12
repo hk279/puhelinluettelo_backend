@@ -59,7 +59,7 @@ app.get("/api/persons/:id", (req, res) => {
 });
 
 // Enter new data
-app.post("/api/persons", (req, res) => {
+app.post("/api/persons", (req, res, next) => {
     const newPerson = {
         name: req.body.name,
         number: req.body.number,
