@@ -13,6 +13,7 @@ app.use(morgan("tiny"));
 
 // Error handling middleware
 const errorHandler = (error, request, response, next) => {
+    console.error(error.name);
     console.error(error.message);
 
     if (error.name === "CastError") {
@@ -76,7 +77,7 @@ app.post("/api/persons", (req, res, next) => {
             console.log(savedData, "Added to phonebook");
             res.json(savedData);
         })
-        .catch((err) => next(err));
+        .catch((error) => next(error));
 });
 
 // Delete an entry
