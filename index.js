@@ -11,22 +11,6 @@ app.use(express.static("build"));
 app.use(express.json());
 app.use(morgan("tiny"));
 
-// Error handling middleware
-const errorHandler = (error, request, response, next) => {
-    console.error(error.name);
-    console.error(error.message);
-
-    if (error.name === "CastError") {
-        return response.status(400).send({ error: "Malformatted id" });
-    } else if (error.name === "ValidationError") {
-        return response.status(400).json({ error: error.message });
-    }
-
-    next(error);
-};
-
-app.use(errorHandler);
-
 // General info
 app.get("/info", (req, res) => {
     res.send(
@@ -39,7 +23,6 @@ app.get("/info", (req, res) => {
 app.get("/api/persons", (req, res) => {
     Person.find({})
         .then((result) => {
-            console.log("All entries retrieved from the database");
             res.send(result);
         })
         .catch((err) => console.log(err));
@@ -52,7 +35,6 @@ app.get("/api/persons/:id", (req, res) => {
             if (result === null) {
                 res.status(404).end();
             } else {
-                console.log(result);
                 res.send(result);
             }
         })
@@ -101,6 +83,46 @@ app.put("/api/persons/:id", (req, res) => {
         })
         .catch((err) => console.log(err));
 });
+
+// Error handling middleware. Simply sends a pre-formatted message to the client.
+const errorHandler = (error, request, response, next) => {
+    const nameError = error.errors.name;
+    const numberError = error.errors.number;
+    console.log(error.errors.name);
+    console.log(error.errors.number);
+
+    let errMsg = "";
+
+    if (error.name === "CastError") {
+        return response.status(400).json({ errorMessage: "Malformatted id" });
+    } else if (error.name === "ValidationError") {
+        // Name error handling.
+        if (typeof nameError !== "undefined") {
+            if (nameError.properties.type === "required") {
+                errMsg = "Name input is required.";
+            } else if (nameError.properties.type === "minlength") {
+                errMsg = "Name minimum length is 3 characters.";
+            } else if (nameError.properties.type === "unique") {
+                errMsg = "Duplicate name.";
+            }
+        }
+        // Number error handling
+        if (typeof numberError !== "undefined") {
+            if (numberError.properties.type === "required") {
+                errMsg = `${errMsg} Number input is required.`;
+            } else if (numberError.properties.type === "minlength") {
+                errMsg = `${errMsg} Number minimum length is 5 characters.`;
+            } else if (numberError.properties.type === "unique") {
+                errMsg = `${errMsg} Duplicate number.`;
+            }
+        }
+        return response.status(400).json({ errorMessage: errMsg });
+    }
+
+    next(error);
+};
+
+app.use(errorHandler);
 
 const port = process.env.PORT;
 app.listen(port, () => {
