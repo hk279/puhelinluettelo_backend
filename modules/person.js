@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 require("dotenv").config();
+var uniqueValidator = require("mongoose-unique-validator");
 
 const url = process.env.MONGODB_URI;
 
@@ -14,9 +15,18 @@ mongoose
         console.log("error connecting to MongoDB:", error.message);
     });
 
+// Schema with validation rules.
 const personSchema = new mongoose.Schema({
-    name: String,
-    number: String,
+    name: {
+        type: String,
+        minlength: 3,
+        required: true,
+    },
+    number: {
+        type: String,
+        minlength: 5,
+        required: true,
+    },
 });
 
 // Format the returned data. Remove _id-object and return a string id instead. Also remove the MondoDB version.
@@ -27,5 +37,8 @@ personSchema.set("toJSON", {
         delete returnedObject.__v;
     },
 });
+
+// Register the validator for duplicate data.
+personSchema.plugin(uniqueValidator);
 
 module.exports = mongoose.model("Person", personSchema);

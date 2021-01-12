@@ -11,6 +11,21 @@ app.use(express.static("build"));
 app.use(express.json());
 app.use(morgan("tiny"));
 
+// Error handling middleware
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message);
+
+    if (error.name === "CastError") {
+        return response.status(400).send({ error: "Malformatted id" });
+    } else if (error.name === "ValidationError") {
+        return response.status(400).json({ error: error.message });
+    }
+
+    next(error);
+};
+
+app.use(errorHandler);
+
 // General info
 app.get("/info", (req, res) => {
     res.send(
@@ -52,13 +67,6 @@ app.post("/api/persons", (req, res) => {
 
     console.log("Data received in the POST-request:", newPerson);
 
-    // Check for missing data
-    if (!newPerson.name || !newPerson.number) {
-        return res.status(400).json({
-            error: "Data missing",
-        });
-    }
-
     // Save the new person to the DB
     var document = new Person(newPerson);
 
@@ -68,7 +76,7 @@ app.post("/api/persons", (req, res) => {
             console.log(savedData, "Added to phonebook");
             res.json(savedData);
         })
-        .catch((err) => console.log(err));
+        .catch((err) => next(err));
 });
 
 // Delete an entry
